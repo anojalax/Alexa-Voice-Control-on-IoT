@@ -1,0 +1,10 @@
+{
+  "intents": [
+    {
+      "intent": "DemoIntent"
+    },
+    {
+      "intent": "ExampleIntent"
+    }
+  ]
+}

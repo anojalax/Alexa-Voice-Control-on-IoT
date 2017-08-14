@@ -1,0 +1,6 @@
+DemoIntent I am leaving the house
+DemoIntent Open garage door
+DemoIntent to help me leave the house
+ExampleIntent for examples
+ExampleIntent for commands
+ExampleIntent for sample utterances
