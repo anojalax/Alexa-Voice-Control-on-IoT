@@ -18,9 +18,16 @@
 #define DHTTYPE           DHT11     // DHT 11 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 uint32_t delayMS;
+bool DETECTED = false;
+int PIR_SENSOR = 33;  // Digital pin IO33
 
+/*const char* ssid = "aftab";
+const char* password = "abgoosht";*/
+const char* ssid = "Ammu's iPhone";
+const char* password = "12345678";
+/*
 const char* ssid = "ATT2.4";
-const char* password = "Srirama7*";
+const char* password = "Srirama7*";*/
 const char* mqtt_server = "ec2-54-86-79-172.compute-1.amazonaws.com";
 char tempvalue[15];
 char humvalue[15];
@@ -31,14 +38,14 @@ void setup()
 {
     Serial.begin(115200);
     WiFi.begin(ssid, password);
-    
+    pinMode(PIR_SENSOR, INPUT);   // declare sensor as input
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
     client.begin(mqtt_server,net);
     connect();
-    client.publish("/temp","initialised");
+    client.publish("/livingroom","initialised");
     dht.begin();
     sensor_t sensor;
       dht.temperature().getSensor(&sensor);
@@ -66,15 +73,33 @@ void setup()
     delayMS = sensor.min_delay / 1000;
     ledcSetup(1, 50, TIMER_WIDTH); // channel 1, 50 Hz, 16-bit width
     ledcAttachPin( SERVO_MOTOR, 1); 
-    
+    client.subscribe("/livingroom/servo");
 }
-
+void drive_motor()
+{
+  for (int i=COUNT_LOW ; i < COUNT_HIGH ; i=i+100)
+           {
+              ledcWrite(1, i);       // sweep servo 1
+              delay(50);
+           }
+}
 void loop(){
   if (!client.connected()) {
       connect();
     }
-    
-    
+    long state = digitalRead(PIR_SENSOR);
+    if(state == HIGH && DETECTED == false) {
+      Serial.println("Motion detected!");
+      client.publish("/livingroom/motion","Motion detected"); 
+      DETECTED = true;
+    }
+    else if(state == LOW && DETECTED == true) {
+      Serial.println("Motion absent!");
+      client.publish("/livingroom/motion","Motion absent");
+      DETECTED = false;
+      }
+      
+     
    // Delay between measurements.
     delay(delayMS);
     // Get temperature event and print its value.
@@ -85,20 +110,15 @@ void loop(){
     }
     else {
       Serial.print("Temperature: ");
-      Serial.print(event.temperature);
-      Serial.println(" *C");
-      if(event.temperature > 35)
+      Serial.print(event.temperature * 1.8 + 32); // conversion to Fahrenheit  T(°F) = T(°C) × 1.8 + 32
+      Serial.println(" *F");
+      if(event.temperature > 68 || event.temperature > 55)
        {
           Serial.println("Temp very high");
-          for (int i=COUNT_LOW ; i < COUNT_HIGH ; i=i+100)
-           {
-              ledcWrite(1, i);       // sweep servo 1
-              delay(50);
-           }
+          dtostrf(event.temperature, 5, 2, tempvalue);
+          client.publish("/livingroom/temp",tempvalue);
+          drive_motor();
        }
-      dtostrf(event.temperature, 5, 2, tempvalue);
-      client.publish("/temp",tempvalue); 
-      //Serial.println(tempvalue);
     }
     // Get humidity event and print its value.
     dht.humidity().getEvent(&event);
@@ -106,16 +126,14 @@ void loop(){
       Serial.println("Error reading humidity!");
     }
     else {
-      /*Serial.print("Humidity: ");
+      Serial.print("Humidity: ");
       Serial.print(event.relative_humidity);
-      Serial.println("%");*/
+      Serial.println("%");
       dtostrf(event.temperature, 5, 2, humvalue);
-      client.publish("/humidity",humvalue); 
+      client.publish("/livingroom/humidity",humvalue); 
       
     }
-    //bool servostatus=false;
-    client.subscribe("/servo");
-    //Serial.println(client.subscribe("/servo"));
+     
   
 }
 
@@ -141,4 +159,5 @@ void messageReceived(String topic, String payload, char * bytes, unsigned int le
   Serial.print(" - ");
   Serial.print(payload);
   Serial.println();
+  drive_motor();
 }
