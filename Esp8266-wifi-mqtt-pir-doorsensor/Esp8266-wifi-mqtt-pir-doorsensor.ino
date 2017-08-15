@@ -1,44 +1,31 @@
 #include <ESP8266WiFi.h>
 #include <MQTTClient.h>
-const char* ssid = "ATT2.4";
+/*const char* ssid = "ATT2.4";
 const char* password = "Srirama7*";
-/*
+*/
 const char* ssid = "aftab";
 const char* password = "abgoosht";
-*/
+
 const char* mqtt_server = "ec2-54-86-79-172.compute-1.amazonaws.com";
 WiFiClient net;
 MQTTClient client;
 unsigned long lastMillis = 0;
-int PIR_SENSOR = D7;  // Digital pin D7
 int DOOR_SENSOR = D3;
-
+int flag =0;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(PIR_SENSOR, INPUT);   // declare sensor as input
   pinMode(DOOR_SENSOR, INPUT);   // declare sensor as input
   WiFi.begin(ssid, password);
   client.begin(mqtt_server, net);
   connect();
-  client.publish("/motion", "initialised");
   client.publish("/doorstatus", "initialised");
 }
 void loop() {
    if (!client.connected()) {
       connect();
     }
-   long state = digitalRead(PIR_SENSOR);
    long doorstate = digitalRead(DOOR_SENSOR);
-   
-    if(state == HIGH) {
-      Serial.println("Motion detected!");
-      client.publish("/motion","Motion detected");  
-    }
-    else {
-      Serial.println("Motion absent!");
-      client.publish("/motion","Motion absent");
-      }
     if(doorstate ==HIGH){
         Serial.println("Door Closed");
         client.publish("/doorstatus","Door Closed");
