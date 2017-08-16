@@ -34,14 +34,10 @@ void chargerOff();
 void livingroomOn();
 void livingroomOff();
 
-  /*  
-const char* ssid = "ATT2.4";
-const char* password = "Srirama7*";
-*/
-const char* ssid = "aftab";
-const char* password = "abgoosht";
+const char* ssid = "ASUS";
+const char* password = "12345678";
 
-const char* mqtt_server = "ec2-54-86-79-172.compute-1.amazonaws.com";
+const char* mqtt_server = "ec2-54-86-79-***.compute-1.amazonaws.com";
 boolean wifiConnected = false;
 MQTTClient client;
 WiFiClient net;

@@ -21,14 +21,10 @@ uint32_t delayMS;
 bool DETECTED = false;
 int PIR_SENSOR = 33;  // Digital pin IO33
 
-/*const char* ssid = "aftab";
-const char* password = "abgoosht";*/
-const char* ssid = "Ammu's iPhone";
+const char* ssid = "ASUS";
 const char* password = "12345678";
-/*
-const char* ssid = "ATT2.4";
-const char* password = "Srirama7*";*/
-const char* mqtt_server = "ec2-54-86-79-172.compute-1.amazonaws.com";
+
+const char* mqtt_server = "ec2-54-86-79-***.compute-1.amazonaws.com";
 char tempvalue[15];
 char humvalue[15];
 char servostatus[15];
@@ -110,12 +106,13 @@ void loop(){
     }
     else {
       Serial.print("Temperature: ");
-      Serial.print(event.temperature * 1.8 + 32); // conversion to Fahrenheit  T(°F) = T(°C) × 1.8 + 32
+      float temp_value = event.temperature * 1.8 + 32;
+      Serial.print(temp_value); // conversion to Fahrenheit  T(°F) = T(°C) × 1.8 + 32
       Serial.println(" *F");
-      if(event.temperature > 68 || event.temperature > 55)
+      if(temp_value > 68 || temp_value < 55)
        {
           Serial.println("Temp very high");
-          dtostrf(event.temperature, 5, 2, tempvalue);
+          dtostrf(temp_value, 5, 2, tempvalue);
           client.publish("/livingroom/temp",tempvalue);
           drive_motor();
        }
